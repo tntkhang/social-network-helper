@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SocialNetworkHelperDemo</string>
+    <string name="facebook_app_id">143565916294247</string>
+    <string name="fb_login_protocol_scheme">feab00722560b3eaf3a61da8c962a760</string>
+    <string name="twitter_consumer_key" translatable="false">xUz5ScuIkhw8NBCOxR5YB8SgQ</string>
+    <string name="twitter_consumer_secret" translatable="false">SeA9m6b5L6mRNmlECfq3BSUXWbIYemi0Mvm7x6zwm2RTP0htnx</string>
+
+</resources>

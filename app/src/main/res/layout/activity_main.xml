@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    tools:activity="khangtran.socialnetworkdemo.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Update status to Facebook and Twitter directly."
+        android:id="@+id/textView"
+        android:textColor="@android:color/black"
+        android:textAlignment="center"
+        android:textSize="20sp"/>
+
+    <EditText
+        android:id="@+id/edtInputText"
+        android:layout_below="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        />
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="contain icon app"
+        android:id="@+id/checkBox"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/edtInputText"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Post Facebook"
+        android:id="@+id/btnPostFb"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBox"
+        android:layout_margin="20dp"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Post Twitter"
+        android:id="@+id/btnPostTw"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/checkBox"
+        android:layout_margin="20dp"/>
+
+</RelativeLayout>
