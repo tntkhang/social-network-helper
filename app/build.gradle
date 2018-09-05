@@ -28,7 +28,7 @@ dependencies {
 
 
 
-    implementation project(':socialnetwork-helper')
+//    implementation project(':socialnetwork-helper')
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     implementation 'com.facebook.android:facebook-android-sdk:4.18.0'

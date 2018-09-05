@@ -3,9 +3,8 @@ package com.github.tntkhang.socialnetworkhelperdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Button;
@@ -20,10 +19,9 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
-import com.github.tntkhang.socialnetworkhelper.FBCallBackListener;
-import com.github.tntkhang.socialnetworkhelper.FacebookHelper;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -38,10 +36,13 @@ import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.services.MediaService;
 import com.twitter.sdk.android.core.services.StatusesService;
 
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -61,18 +62,11 @@ public class MainActivity extends Activity {
     @BindView(R.id.edtInputText)
     EditText edtInputText;
 
-    public static final String KEY_IS_MY_SET_MENU = "KEY_IS_MY_SET_MENU";
-    public static final String KEY_MOVIE_SET_ID = "KEY_MOVIE_SET_ID";
-    public static final String KEY_POST_TYPE = "KEY_POST_TYPE";
-    public static final String KEY_FEEDBACK_STRING = "KEY_FEEDBACK_STRING";
-
-    private static final String PERMISSION = "publish_actions";
-    private static final int REQUEST_CODE_TAKE_IMAGE = 123;
-    private static final int REQUEST_CODE_HASH_TAG = 124;
-    public static final String BITMAP_IMAGE = "BITMAP_IMAGE";
-
     private Bitmap mPostBitmap;
     private String mPostBMPPath;
+
+    private static final String PERMISSION = "publish_actions";
+    private boolean isRevokeAuthen = true;
 
     private PendingAction pendingAction = PendingAction.NONE;
     private TwitterAuthClient mTWLoginClient;
@@ -165,34 +159,6 @@ public class MainActivity extends Activity {
         LoginManager.getInstance().registerCallback(mFBCallbackManager, mFbLoginCallBack);
         mTWLoginClient = new TwitterAuthClient();
 
-        FacebookHelper.initHelper(this);
-
-        FacebookHelper.getInstance().setFBCallBackListener(new FBCallBackListener() {
-            @Override
-            public void onLoginRevokeSuccess() {
-                Log.i("tntkhang", "FacebookHelper.getInstance() Sucess");
-            }
-
-            @Override
-            public void onLoginRevokeFail() {
-                Log.e("tntkhang", "FacebookHelper.getInstance() fail");
-            }
-
-            @Override
-            public void onLoginRevokeCancel() {
-
-            }
-
-            @Override
-            public void onFBPostSuccess() {
-                Log.i("tntkhang", "FacebookHelper.getInstance() onFBPostSuccess ");
-            }
-
-            @Override
-            public void onFBPostFail() {
-                Log.e("tntkhang", "FacebookHelper.getInstance() onFBPostFail ");
-            }
-        });
     }
 
     @Override
@@ -210,8 +176,9 @@ public class MainActivity extends Activity {
 
     @OnClick(R.id.btnPostFb)
     public void onBtnPostFbClick() {
-        FacebookHelper.getInstance().postStatus("Hello from Library");
+        onFBClickPost();
     }
+
     @OnClick(R.id.btnPostTw)
     public void onBtnPostTwClick() {
         onTWClickPost();
@@ -266,7 +233,7 @@ public class MainActivity extends Activity {
         performPublish(PendingAction.TW_POST_PHOTO);
     }
 
-    private void postTWStatus(String message) {
+    private void actionPostTWStatus(String message) {
         TwitterSession session = TwitterCore.getInstance().getSessionManager().getActiveSession();
         if (session != null) {
             StatusesService service = TwitterCore.getInstance().getApiClient().getStatusesService();
@@ -277,7 +244,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void postTWPhoto(final String message) {
+    private void actionPostTWPhoto(final String message) {
         File file = fileFromBitmap(mPostBitmap);
         TwitterSession session = TwitterCore.getInstance().getSessionManager().getActiveSession();
         if (session != null) {
@@ -320,6 +287,67 @@ public class MainActivity extends Activity {
     }
 
 
+    private void onFBClickPost() {
+        if (mPostBitmap == null) {
+            performPublish(PendingAction.FB_POST_STATUS);
+        } else {
+            performPublish(PendingAction.FB_POST_PHOTO);
+        }
+    }
+
+    public void postFBStatus(String status) {
+        performPublish(PendingAction.FB_POST_STATUS);
+    }
+
+    public void postFBImage(String status, Bitmap photo) {
+        mPostBitmap = photo;
+        performPublish(PendingAction.FB_POST_PHOTO);
+    }
+
+    public void setRevokeAuthen(boolean isRevokeAuthen) {
+        this.isRevokeAuthen = isRevokeAuthen;
+    }
+
+    private void actionPostFBStatus(String message) {
+        if (hasPublishPermission()) {
+            Bundle params = new Bundle();
+            params.putString("message", message);
+            // make the API call
+            new GraphRequest(
+                    AccessToken.getCurrentAccessToken(),
+                    "/me/feed",
+                    params,
+                    HttpMethod.POST,
+                    mFbPostCallBack
+            ).executeAsync();
+        } else if (isRevokeAuthen) {
+            pendingAction = PendingAction.FB_POST_STATUS;
+            LoginManager.getInstance().logInWithPublishPermissions(this, Arrays.asList(PERMISSION));
+        }
+    }
+
+    private void actionPostFBPhoto(String message) {
+        if (hasPublishPermission()) {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            mPostBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+
+            final JSONObject graphObject = new JSONObject();
+
+            GraphRequest request = GraphRequest.newPostRequest(AccessToken.getCurrentAccessToken(), "me/photos", graphObject, mFbPostCallBack);
+            Bundle params = new Bundle();
+            params.putString("caption", message);
+            params.putByteArray("picture", byteArray);
+
+            request.setParameters(params);
+            request.executeAsync();
+        } else if (isRevokeAuthen) {
+            pendingAction = PendingAction.FB_POST_PHOTO;
+            LoginManager.getInstance().logInWithPublishPermissions(this, Arrays.asList(PERMISSION));
+        }
+    }
+
+
     private boolean hasPublishPermission() {
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         return accessToken != null && accessToken.getPermissions().contains("publish_actions");
@@ -337,10 +365,16 @@ public class MainActivity extends Activity {
             case NONE:
                 break;
             case TW_POST_PHOTO:
-                postTWPhoto(message);
+                actionPostTWPhoto(message);
                 break;
             case TW_POST_STATUS:
-                postTWStatus(message);
+                actionPostTWStatus(message);
+                break;
+            case FB_POST_PHOTO:
+                actionPostFBPhoto(message);
+                break;
+            case FB_POST_STATUS:
+                actionPostFBStatus(message);
                 break;
         }
     }
