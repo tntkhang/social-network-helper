@@ -1,1 +1,1 @@
-include ':app', ':socialnetwork-helper'
+include ':app'

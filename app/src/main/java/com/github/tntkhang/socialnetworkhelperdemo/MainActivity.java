@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -65,7 +66,7 @@ public class MainActivity extends Activity {
     private Bitmap mPostBitmap;
     private String mPostBMPPath;
 
-    private static final String PERMISSION = "publish_actions";
+    private static final List<String> PERMISSIONS =  Arrays.asList("friends_photos", "email", "user_birthday", "user_friends", "publish_actions");
     private boolean isRevokeAuthen = true;
 
     private PendingAction pendingAction = PendingAction.NONE;
@@ -295,19 +296,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void postFBStatus(String status) {
-        performPublish(PendingAction.FB_POST_STATUS);
-    }
-
-    public void postFBImage(String status, Bitmap photo) {
-        mPostBitmap = photo;
-        performPublish(PendingAction.FB_POST_PHOTO);
-    }
-
-    public void setRevokeAuthen(boolean isRevokeAuthen) {
-        this.isRevokeAuthen = isRevokeAuthen;
-    }
-
     private void actionPostFBStatus(String message) {
         if (hasPublishPermission()) {
             Bundle params = new Bundle();
@@ -322,7 +310,7 @@ public class MainActivity extends Activity {
             ).executeAsync();
         } else if (isRevokeAuthen) {
             pendingAction = PendingAction.FB_POST_STATUS;
-            LoginManager.getInstance().logInWithPublishPermissions(this, Arrays.asList(PERMISSION));
+            LoginManager.getInstance().logInWithPublishPermissions(this, PERMISSIONS);
         }
     }
 
@@ -343,7 +331,7 @@ public class MainActivity extends Activity {
             request.executeAsync();
         } else if (isRevokeAuthen) {
             pendingAction = PendingAction.FB_POST_PHOTO;
-            LoginManager.getInstance().logInWithPublishPermissions(this, Arrays.asList(PERMISSION));
+            LoginManager.getInstance().logInWithPublishPermissions(this, PERMISSIONS);
         }
     }
 
